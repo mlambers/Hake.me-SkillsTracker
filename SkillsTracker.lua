@@ -2,10 +2,10 @@ local SkillsTracker = {}
 
 SkillsTracker.OptionEnable = Menu.AddOption({"mlambers", "Skills Tracker"}, "1. Enable.", "Enable/Disable this script.")
 SkillsTracker.Size = Menu.AddOption({"mlambers", "Skills Tracker"}, "2. Size", "", 21, 48, 1)
-SkillsTracker.DividerOffset = Menu.AddOption({"mlambers", "Skills Tracker"}, "3. Divider Offset", "", 1, 100, 1)
-SkillsTracker.HeightOffset = Menu.AddOption({"mlambers", "Skills Tracker"}, "4. Height Offset", "", 1, 250, 1)
-SkillsTracker.OffsetX = Menu.AddOption({"mlambers", "Skills Tracker"}, "5. X Offset Dire", "", 1, 200, 1)
-SkillsTracker.OffsetXRadiant = Menu.AddOption({"mlambers", "Skills Tracker"}, "6. X Offset Radiant", "", 1, 200, 1)
+SkillsTracker.DividerOffset = Menu.AddOption({"mlambers", "Skills Tracker"}, "3. Divider Offset", "", 1, 300, 1)
+SkillsTracker.HeightOffset = Menu.AddOption({"mlambers", "Skills Tracker"}, "4. Height Offset", "", 1, 500, 1)
+SkillsTracker.OffsetX = Menu.AddOption({"mlambers", "Skills Tracker"}, "5. X Offset Dire", "", 1, 1500, 1)
+SkillsTracker.OffsetXRadiant = Menu.AddOption({"mlambers", "Skills Tracker"}, "6. X Offset Radiant", "", 1, 1500, 1)
 
 SkillsTracker.NeedInit = true
 SkillsTracker.FontCooldown = nil
