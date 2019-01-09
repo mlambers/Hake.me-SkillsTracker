@@ -804,7 +804,7 @@ function SkillsTracker.OnUpdate()
 	if ScheduleUpdateTick < CurrentTick then
 		local EnumIndex = nil
 		local TargetAbility = nil
-	
+		
 		for i = 1, Heroes.Count() do
 			TempHeroesOnUpdate = Heroes.Get(i) or nil
 			
@@ -816,6 +816,7 @@ function SkillsTracker.OnUpdate()
 			and Entity.IsPlayer(Entity.GetOwner(TempHeroesOnUpdate))
 			and SpellList[NPC.GetUnitName(TempHeroesOnUpdate)] ~= nil 
 			then
+				
 				if StackList[Hero.GetPlayerID(TempHeroesOnUpdate)] == nil then
 					StackList[Hero.GetPlayerID(TempHeroesOnUpdate)] = {}
 					
@@ -876,7 +877,7 @@ function SkillsTracker.GetPosX(id)
 	if OppositeTeam == 3 then
 		return MathFloor((ScreenWidth * 0.5) + 0.5) + ((id - 5) * Menu.GetValue(SkillsTracker.DividerOffset)) + Menu.GetValue(SkillsTracker.OffsetX)
 	else
-		return MathFloor((ScreenWidth * 0.5) + 0.5) - ((4 - id) * Menu.GetValue(SkillsTracker.DividerOffset)) + Menu.GetValue(SkillsTracker.OffsetXRadiant)
+		return MathFloor((ScreenWidth * 0.5) + 0.5) - ((4 - id) * Menu.GetValue(SkillsTracker.DividerOffset)) - Menu.GetValue(SkillsTracker.OffsetXRadiant)
 	end
 end
 
