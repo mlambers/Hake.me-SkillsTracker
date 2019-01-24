@@ -91,8 +91,9 @@ local SpellList = {
 		} 
 	},
 	npc_dota_hero_pudge = { 
-		total = 1,
+		total = 2,
 		index = {
+			0,
 			5
 		}
 	},
@@ -121,9 +122,10 @@ local SpellList = {
 		} 
 	},
 	npc_dota_hero_tiny = { 
-		total = 1,
+		total = 2,
 		index = {
-			5
+			0,
+			1
 		} 
 	},
 	npc_dota_hero_vengefulspirit = { 
@@ -609,6 +611,12 @@ local SpellList = {
 			5
 		} 
 	},
+	npc_dota_hero_meepo = { 
+		total = 1,
+		index = {
+			1
+		} 
+	},
 	npc_dota_hero_abaddon = { 
 		total = 1,
 		index = {
@@ -814,10 +822,12 @@ function SkillsTracker.OnUpdate()
 			and Entity.IsSameTeam(MyHero, TempHeroesOnUpdate) == false 
 			and NPC.IsIllusion(TempHeroesOnUpdate) == false 
 			and Entity.IsPlayer(Entity.GetOwner(TempHeroesOnUpdate))
-			and SpellList[NPC.GetUnitName(TempHeroesOnUpdate)] ~= nil 
+			and SpellList[NPC.GetUnitName(TempHeroesOnUpdate)] ~= nil
+			and NPC.GetReplicatedHero(TempHeroesOnUpdate) == nil
 			then
 				
 				if StackList[Hero.GetPlayerID(TempHeroesOnUpdate)] == nil then
+					--Log.Write(Hero.GetPlayerID(TempHeroesOnUpdate))
 					StackList[Hero.GetPlayerID(TempHeroesOnUpdate)] = {}
 					
 					StackList[Hero.GetPlayerID(TempHeroesOnUpdate)].Id = Hero.GetPlayerID(TempHeroesOnUpdate)
