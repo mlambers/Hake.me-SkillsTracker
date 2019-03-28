@@ -1,3 +1,7 @@
+--------------------------------------
+--- SkillsTracker.lua Version 0.3b ---
+--------------------------------------
+
 local SkillsTracker = {}
 
 SkillsTracker.OptionEnable = Menu.AddOption({"mlambers", "Skills Tracker"}, "1. Enable.", "Enable/Disable this script.")
@@ -7,7 +11,6 @@ SkillsTracker.HeightOffset = Menu.AddOption({"mlambers", "Skills Tracker"}, "4. 
 SkillsTracker.OffsetX = Menu.AddOption({"mlambers", "Skills Tracker"}, "5. X Offset Dire", "", 1, 1500, 1)
 SkillsTracker.OffsetXRadiant = Menu.AddOption({"mlambers", "Skills Tracker"}, "6. X Offset Radiant", "", 1, 1500, 1)
 
-SkillsTracker.NeedInit = true
 SkillsTracker.FontCooldown = nil
 
 local SpellList = {
@@ -731,7 +734,10 @@ local MathFloor = math.floor
 local MathCeil = math.ceil
 
 function SkillsTracker.OnScriptLoad()
-	StackList = {}
+	for k, v in pairs( StackList ) do
+		StackList[ k ] = nil
+	end
+	
 	CurrentTick = 0
 	ScheduleUpdateTick = 0
 	MyHero = nil
@@ -742,16 +748,15 @@ function SkillsTracker.OnScriptLoad()
 	ScreenHeight = nil
 	CurrentCdCounter = nil
 	SkillsTracker.FontCooldown = nil
-	SkillsTracker.NeedInit = true
 	
-	Console.Print("\n=================================================\n")
-	Console.Print("Script: SkillsTracker | Callback: OnScriptLoad()\n")
-	Console.Print("Current Time: " .. (os.date("%Y-%m-%d %I:%M %p")))
-	Console.Print("=================================================\n\n")
+	Console.Print("[" .. os.date("%I:%M:%S %p") .. "] - - [ SkillsTracker.lua ] [ Version 0.3b ] Script load.")
 end
 
 function SkillsTracker.OnGameEnd()
-	StackList = {}
+	for k, v in pairs( StackList ) do
+		StackList[ k ] = nil
+	end
+	
 	CurrentTick = 0
 	ScheduleUpdateTick = 0
 	MyHero = nil
@@ -762,13 +767,9 @@ function SkillsTracker.OnGameEnd()
 	ScreenHeight = nil
 	CurrentCdCounter = nil
 	SkillsTracker.FontCooldown = nil
-	SkillsTracker.NeedInit = true
 	collectgarbage("collect")
 	
-	Console.Print("\n==============================================\n")
-	Console.Print("Script: SkillsTracker | Callback: OnGameEnd()\n")
-	Console.Print("Current Time: " .. (os.date("%Y-%m-%d %I:%M %p")))
-	Console.Print("==============================================\n\n")
+	Console.Print("[" .. os.date("%I:%M:%S %p") .. "] - - [ SkillsTracker.lua ] [ Version 0.3b ] Game end. Reset all variable.")
 end
 
 local function roundToNthDecimal(num, n)
@@ -787,8 +788,10 @@ end
 function SkillsTracker.OnUpdate()
 	if Menu.IsEnabled(SkillsTracker.OptionEnable) == false then return end
 	
-	if SkillsTracker.NeedInit == true then
-		StackList = {}
+	if MyHero == nil or MyHero ~= Heroes.GetLocal() then
+		for k, v in pairs( StackList ) do
+			StackList[ k ] = nil
+		end
 		
 		CurrentTick = 0
 		ScheduleUpdateTick = 0
@@ -806,19 +809,19 @@ function SkillsTracker.OnUpdate()
 		
 		SkillsTracker.FontCooldown = Renderer.LoadFont("monospaceNumbersFont", MathFloor((Menu.GetValue(SkillsTracker.Size) * 0.45)), Enum.FontWeight.BOLD)
 		CurrentCdCounter = nil
-		SkillsTracker.NeedInit = false
+		
+		Console.Print("[" .. os.date("%I:%M:%S %p") .. "] - - [ SkillsTracker.lua ] [ Version 0.3b ] Game started, init script done.")
+		return
 	end
 	
-	if MyHero == nil then return end
-	
-	CurrentTick = os.clock()
+	CurrentTick = GlobalVars.GetTickTime()
 	
 	if ScheduleUpdateTick < CurrentTick then
 		local EnumIndex = nil
 		local TargetAbility = nil
 		
 		for i = 1, Heroes.Count() do
-			TempHeroesOnUpdate = Heroes.Get(i) or nil
+			TempHeroesOnUpdate = Heroes.Get(i)
 			
 			if TempHeroesOnUpdate ~= nil 
 			and Entity.IsDormant(TempHeroesOnUpdate) == false 
@@ -830,13 +833,14 @@ function SkillsTracker.OnUpdate()
 			and NPC.GetReplicatedHero(TempHeroesOnUpdate) == nil
 			then
 				
-				if StackList[Hero.GetPlayerID(TempHeroesOnUpdate)] == nil then
+				if StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))] == nil then
+					Log.Write("Name: " .. tostring(NPC.GetUnitName(TempHeroesOnUpdate)) .. " IsDormant: " .. tostring(Entity.IsDormant(TempHeroesOnUpdate)) .. " IsAlive: " .. tostring(Entity.IsAlive(TempHeroesOnUpdate)) .. " IsSameTeam: " .. tostring(Entity.IsSameTeam(MyHero, TempHeroesOnUpdate)) .. " IsIllusion: " .. tostring(NPC.IsIllusion(TempHeroesOnUpdate)) .. " IsPlayer: " .. tostring(Entity.IsPlayer(Entity.GetOwner(TempHeroesOnUpdate))) .. " IsNilSpellList: " .. tostring(SpellList[NPC.GetUnitName(TempHeroesOnUpdate)] ~= nil) .. " GetReplicatedHero: " .. tostring(NPC.GetReplicatedHero(TempHeroesOnUpdate)) .. " TestAbil: " .. tostring(Ability.GetName(NPC.GetAbilityByIndex(TempHeroesOnUpdate, 0))) )
+					
 					--Log.Write(Hero.GetPlayerID(TempHeroesOnUpdate))
-					StackList[Hero.GetPlayerID(TempHeroesOnUpdate)] = {}
-					
-					StackList[Hero.GetPlayerID(TempHeroesOnUpdate)].Id = Hero.GetPlayerID(TempHeroesOnUpdate)
-					
-					StackList[Hero.GetPlayerID(TempHeroesOnUpdate)].UnitName = NPC.GetUnitName(TempHeroesOnUpdate)
+					StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))] = {
+						['Id'] = Hero.GetPlayerID(TempHeroesOnUpdate),
+						['UnitName'] = NPC.GetUnitName(TempHeroesOnUpdate)
+					}
 					
 					for i = 1, SpellList[NPC.GetUnitName(TempHeroesOnUpdate)].total do
 						EnumIndex = SpellList[NPC.GetUnitName(TempHeroesOnUpdate)].index[i]
@@ -844,17 +848,15 @@ function SkillsTracker.OnUpdate()
 						
 						--Console.Print(Ability.GetName(TargetAbility))
 						
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]['Spell' .. i ..'Level'] = Ability.GetLevel(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]['Spell' .. i ..'Level'] = Ability.GetLevel(TargetAbility)
 						
-						--StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["Spell" .. i .."TextureName"] = Ability.GetName(TargetAbility) .. "_png.png"
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["Spell" .. i .."ImageHandle"] = Renderer.LoadImage("~/rounded/" .. Ability.GetName(TargetAbility) .. "_png.png")
 					
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["Spell" .. i .."ImageHandle"] = Renderer.LoadImage("~/rounded/" .. Ability.GetName(TargetAbility) .. "_png.png")
-					
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["Cooldown" .. i] = Ability.GetCooldown(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["Cooldown" .. i] = Ability.GetCooldown(TargetAbility)
 						
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["CooldownLength" .. i] = Ability.GetCooldownLength(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["CooldownLength" .. i] = Ability.GetCooldownLength(TargetAbility)
 					
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["Cooldown".. i .."EndAt"] = GameRules.GetGameTime() + Ability.GetCooldown(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["Cooldown".. i .."EndAt"] = GameRules.GetGameTime() + Ability.GetCooldown(TargetAbility)
 					end
 				
 				else
@@ -862,13 +864,13 @@ function SkillsTracker.OnUpdate()
 						EnumIndex = SpellList[NPC.GetUnitName(TempHeroesOnUpdate)].index[i]
 						TargetAbility = NPC.GetAbilityByIndex(TempHeroesOnUpdate, EnumIndex)
 						
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["Spell" .. i .."Level"] = Ability.GetLevel(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["Spell" .. i .."Level"] = Ability.GetLevel(TargetAbility)
 					
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["Cooldown" .. i] = Ability.GetCooldown(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["Cooldown" .. i] = Ability.GetCooldown(TargetAbility)
 						
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["CooldownLength" .. i] = Ability.GetCooldownLength(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["CooldownLength" .. i] = Ability.GetCooldownLength(TargetAbility)
 					
-						StackList[Hero.GetPlayerID(TempHeroesOnUpdate)]["Cooldown".. i .."EndAt"] = GameRules.GetGameTime() + Ability.GetCooldown(TargetAbility)
+						StackList[tostring(Hero.GetPlayerID(TempHeroesOnUpdate))]["Cooldown".. i .."EndAt"] = GameRules.GetGameTime() + Ability.GetCooldown(TargetAbility)
 					end
 				end
 			end
@@ -909,60 +911,64 @@ end
 
 function SkillsTracker.OnDraw()
 	if Menu.IsEnabled(SkillsTracker.OptionEnable) == false then return end
-	if Engine.IsInGame() == false then return end
-	if GameRules.GetGameState() < 4 then return end
-	if GameRules.GetGameState() > 5 then return end
-	if SkillsTracker.NeedInit == true then return end
-	if MyHero == nil then return end
 	
-	-- Need to stop drawing when update data happens.
+	if
+		Engine.IsInGame() == false
+		or GameRules.GetGameState() < 4 
+		or GameRules.GetGameState() > 5
+		or MyHero == nil
+	then
+		return
+	end
+
+	--[[ 
+		Need to stop drawing when update data happens.
+	--]]
 	if ScheduleUpdateTick < CurrentTick then return end
 	
 	local HeightAdjust = nil
 	local CoorXTarget = nil
 	local CoorYTarget = nil
-	
+		
 	for _, value in pairs(StackList) do
-		if value ~= nil then
-			
-			for i = 1, SpellList[value.UnitName].total do
-				HeightAdjust = 0
-				
-				if i > 1 then
-					HeightAdjust = (Menu.GetValue(SkillsTracker.Size) * (i - 1)) + (5 * (i - 1))
-				end
-				
-				if value["Cooldown" .. i] == 0.0 then
-					--[[
-						If skill currently not on cooldown then we draw
-					--]]
-					GetColor(value["Spell" .. i .. "Level"])	
-					Renderer.DrawImage(value['Spell' .. i .. 'ImageHandle'], SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
+		for i = 1, SpellList[value.UnitName].total do
+			HeightAdjust = 0
 					
-					Renderer.SetDrawColor(255, 255, 255, 255)
-					if value["Spell" .. i .. "Level"] < 1 then
-						Renderer.DrawImage("~/rounded/RadialBar/0.png", SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
-					else
-						Renderer.DrawImage("~/rounded/RadialBar/100.png", SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
-					end
+			if i > 1 then
+				HeightAdjust = (Menu.GetValue(SkillsTracker.Size) * (i - 1)) + (5 * (i - 1))
+			end
+					
+			if value["Cooldown" .. i] == 0.0 then
+				--[[
+					If skill currently not on cooldown then we draw
+				--]]
+				GetColor(value["Spell" .. i .. "Level"])	
+				Renderer.DrawImage(value['Spell' .. i .. 'ImageHandle'], SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
+						
+				Renderer.SetDrawColor(255, 255, 255, 255)
+					
+				if value["Spell" .. i .. "Level"] < 1 then
+					Renderer.DrawImage("~/rounded/RadialBar/0.png", SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
 				else
-					if value['Cooldown' .. i .. 'EndAt'] < GameRules.GetGameTime() then
-						value['Cooldown' .. i] = 0.0
-					end
-					
-					Renderer.SetDrawColor(255, 150, 150, 255)
-					Renderer.DrawImage(value['Spell' .. i .. 'ImageHandle'], SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
-					
-					CurrentCdCounter = roundToNthDecimal((value['Cooldown' .. i .. 'EndAt'] - GameRules.GetGameTime()), 1)
-					CoorXTarget = SkillsTracker.GetCooldownXcenter(CurrentCdCounter, SkillsTracker.GetPosX(value.Id))
-					CoorYTarget = SkillsTracker.GetCooldownYcenter(CurrentCdCounter, Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust)
-					
-					Renderer.SetDrawColor(255, 255, 255, 255)
-					Renderer.DrawText(SkillsTracker.FontCooldown, CoorXTarget, CoorYTarget, CurrentCdCounter, shadow)
-					
-					Renderer.DrawImage("~/rounded/RadialBar/".. (100 - MathCeil(100 * (MathCeil(CurrentCdCounter) / MathCeil(value["CooldownLength" .. i])))) .. ".png", SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
-					
+					Renderer.DrawImage("~/rounded/RadialBar/100.png", SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
 				end
+			else
+				if value['Cooldown' .. i .. 'EndAt'] < GameRules.GetGameTime() then
+					value['Cooldown' .. i] = 0.0
+				end
+						
+				Renderer.SetDrawColor(255, 150, 150, 255)
+				Renderer.DrawImage(value['Spell' .. i .. 'ImageHandle'], SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
+						
+				CurrentCdCounter = roundToNthDecimal((value['Cooldown' .. i .. 'EndAt'] - GameRules.GetGameTime()), 1)
+				CoorXTarget = SkillsTracker.GetCooldownXcenter(CurrentCdCounter, SkillsTracker.GetPosX(value.Id))
+				CoorYTarget = SkillsTracker.GetCooldownYcenter(CurrentCdCounter, Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust)
+						
+				Renderer.SetDrawColor(255, 255, 255, 255)
+				Renderer.DrawText(SkillsTracker.FontCooldown, CoorXTarget, CoorYTarget, CurrentCdCounter, shadow)
+						
+				Renderer.DrawImage("~/rounded/RadialBar/".. (100 - MathCeil(100 * (MathCeil(CurrentCdCounter) / MathCeil(value["CooldownLength" .. i])))) .. ".png", SkillsTracker.GetPosX(value.Id), Menu.GetValue(SkillsTracker.HeightOffset) + HeightAdjust, Menu.GetValue(SkillsTracker.Size), Menu.GetValue(SkillsTracker.Size))
+				
 			end
 		end
 	end
